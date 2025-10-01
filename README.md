@@ -1,8 +1,6 @@
 📋 Descrição do Projeto
 O Sistema de Gestão Integrado é uma aplicação web que permite centralizar todos os seus aplicativos web em um único lugar. Com uma interface moderna e intuitiva, você pode organizar, acessar e gerenciar seus aplicativos favoritos de forma eficiente.
 
-https://via.placeholder.com/800x400/121826/00f3ff?text=Sistema+de+Gest%C3%A3o+Integrado
-
 ✨ Funcionalidades
 🎯 Principais Características
 Dashboard Centralizado: Acesse todos seus aplicativos em uma única página
