@@ -864,7 +864,7 @@
         }
 
         function showMainSystem() {
-            loginModal.style.display = 'none';
+            loginModal.style.display = "none";
             mainSystem.style.display = 'block';
             
             localStorage.setItem('currentMode', currentMode);
@@ -887,8 +887,8 @@
         function logout() {
             localStorage.removeItem('currentMode');
             currentMode = null;
-            mainSystem.style.display = 'none';
-            loginModal.style.display = 'flex';
+            mainSystem.style.display = "none";
+            loginModal.style.display = "flex";
             passwordInput.value = '';
             adminModeBtn.classList.remove('active');
             userModeBtn.classList.remove('active');
@@ -993,7 +993,7 @@
         }
 
         function closeModal() {
-            appModal.style.display = 'none';
+            appModal.style.display = "none";
             editingAppId = null;
             modalTitle.textContent = 'Adicionar Novo Aplicativo';
         }
