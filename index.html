@@ -641,9 +641,9 @@
 
     <script>
         // Configurações do Google Sheets
-        const SHEET_ID = '1YOUR_SHEET_ID_HERE'; // Substitua pelo ID da sua planilha
-        const SHEET_NAME = 'Aplicativos';
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // Substitua pela URL do seu Apps Script
+        const SHEET_ID = '1Na8Phz7EfSXw_ZqmmTczNnuxR-YZ6EFu5XqP_93_qTE'; // Substitua pelo ID da sua planilha
+        const SHEET_NAME = 'SistemaGestaoApps';
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIWlAPqRCWhVtjAAa3C2kIK_rQ6njg_Wo3l9UKpqJbroDEP-vZ6LxWFeVB9dK-N2cG/exec'; // Substitua pela URL do seu Apps Script
 
         // Configurações do sistema
         const ADMIN_PASSWORD = "admin123";
@@ -703,35 +703,51 @@
 
         // Sistema de Armazenamento Online - Google Sheets
         async function loadAppsFromSheets() {
-            showStatus('Carregando aplicativos...', 'info');
-            
-            try {
-                // Fallback para dados locais se a API não estiver configurada
-                if (!GOOGLE_APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbw7X5-EAL_lb-9o8kB7RCRA6qmQrQ1hKNFGQfAZAQvo_pUvg-thnsGxtPtI4-Jx9wF89A/exec')) {
-                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        apps = data.apps;
-                        showStatus('Aplicativos carregados com sucesso!', 'success');
-                    } else {
-                        throw new Error('Erro ao carregar dados');
-                    }
-                } else {
-                    // Usar dados locais como fallback
-                    const localApps = localStorage.getItem('myApps');
-                    apps = localApps ? JSON.parse(localApps) : getDefaultApps();
-                    showStatus('Usando armazenamento local', 'warning');
-                }
-            } catch (error) {
-                console.error('Erro ao carregar apps:', error);
-                const localApps = localStorage.getItem('myApps');
-                apps = localApps ? JSON.parse(localApps) : getDefaultApps();
-                showStatus('Erro ao carregar online. Usando local.', 'error');
-            }
-            
-            renderApps();
+    showStatus('Conectando com servidor...', 'info');
+    
+    try {
+        // Verificar se a URL está configurada
+        if (GOOGLE_APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID') || GOOGLE_APPS_SCRIPT_URL.includes('SUA_NOVA_URL_AQUI')) {
+            throw new Error('URL do Apps Script não configurada');
         }
+
+        console.log('🔄 Tentando conectar com:', GOOGLE_APPS_SCRIPT_URL);
+        
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+        
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('📦 Dados recebidos:', data);
+        
+        if (data.success && Array.isArray(data.apps)) {
+            apps = data.apps;
+            // Salvar também localmente como backup
+            localStorage.setItem('myApps', JSON.stringify(apps));
+            showStatus(`✅ ${apps.length} apps carregados do servidor!`, 'success');
+        } else {
+            throw new Error('Resposta inválida: ' + (data.error || 'Formato desconhecido'));
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar online:', error);
+        
+        // Fallback para dados locais
+        const localApps = localStorage.getItem('myApps');
+        if (localApps) {
+            apps = JSON.parse(localApps);
+            showStatus(`⚠️ Usando local (${apps.length} apps) - ${error.message}`, 'warning');
+        } else {
+            apps = getDefaultApps();
+            localStorage.setItem('myApps', JSON.stringify(apps));
+            showStatus(`⚠️ Usando padrão (${apps.length} apps) - ${error.message}`, 'warning');
+        }
+    }
+    
+    renderApps();
+}
 
         async function saveAppsToSheets() {
             if (currentMode !== 'admin') return;
