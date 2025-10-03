@@ -707,7 +707,7 @@
             
             try {
                 // Fallback para dados locais se a API não estiver configurada
-                if (!GOOGLE_APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) {
+                if (!GOOGLE_APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbw7X5-EAL_lb-9o8kB7RCRA6qmQrQ1hKNFGQfAZAQvo_pUvg-thnsGxtPtI4-Jx9wF89A/exec')) {
                     const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
                     const data = await response.json();
                     
