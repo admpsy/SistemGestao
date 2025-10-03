@@ -18,8 +18,12 @@
             --neon-border: 1px solid #00f3ff;
             --admin-color: #ff4444;
             --user-color: #44ff44;
+            --success-color: #44ff44;
+            --warning-color: #ffaa00;
+            --error-color: #ff4444;
         }
 
+        /* [Todo o CSS anterior permanece igual] */
         * {
             margin: 0;
             padding: 0;
@@ -131,6 +135,38 @@
 
         .access-btn:hover {
             box-shadow: var(--accent-glow);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-online {
+            background: var(--success-color);
+            color: var(--primary-color);
+        }
+
+        .status-offline {
+            background: var(--warning-color);
+            color: var(--primary-color);
+        }
+
+        .status-error {
+            background: var(--error-color);
+            color: white;
         }
 
         /* Header com informações de modo */
@@ -509,6 +545,12 @@
     </style>
 </head>
 <body>
+    <!-- Status Bar -->
+    <div class="status-bar" id="statusBar" style="display: none;">
+        <span id="statusIcon">⚡</span>
+        <span id="statusText">Conectando...</span>
+    </div>
+
     <!-- Modal de Login -->
     <div class="login-modal" id="loginModal">
         <div class="login-content">
@@ -532,6 +574,7 @@
             <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
                 <p><strong>Modo Administrador:</strong> Gerencia aplicativos</p>
                 <p><strong>Modo Usuário:</strong> Apenas visualização</p>
+                <p><strong>Armazenamento:</strong> Online (Google Sheets)</p>
             </div>
         </div>
     </div>
@@ -591,47 +634,27 @@
         <footer>
             <div class="footer-content">
                 <div class="developer">Aldemir Garbino</div>
-                <div class="ai-assistance">Desenvolvido com assistência de IA</div>
+                <div class="ai-assistance">Desenvolvido com assistência de IA | Armazenamento Online</div>
             </div>
         </footer>
     </div>
 
     <script>
+        // Configurações do Google Sheets
+        const SHEET_ID = '1YOUR_SHEET_ID_HERE'; // Substitua pelo ID da sua planilha
+        const SHEET_NAME = 'Aplicativos';
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // Substitua pela URL do seu Apps Script
+
         // Configurações do sistema
-        const ADMIN_PASSWORD = "admin123"; // Senha do administrador (pode ser alterada)
+        const ADMIN_PASSWORD = "admin123";
         let currentMode = null;
-        let apps = JSON.parse(localStorage.getItem('myApps')) || [
-            {
-                id: 1,
-                name: "Gmail",
-                url: "https://mail.google.com",
-                description: "Serviço de email do Google",
-                icon: "📧"
-            },
-            {
-                id: 2,
-                name: "Google Drive",
-                url: "https://drive.google.com",
-                description: "Armazenamento em nuvem",
-                icon: "📁"
-            },
-            {
-                id: 3,
-                name: "WhatsApp Web",
-                url: "https://web.whatsapp.com",
-                description: "Mensagens instantâneas",
-                icon: "💬"
-            },
-            {
-                id: 4,
-                name: "Trello",
-                url: "https://trello.com",
-                description: "Gestão de projetos",
-                icon: "📋"
-            }
-        ];
+        let apps = [];
 
         // Elementos DOM
+        const statusBar = document.getElementById('statusBar');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+        
         const loginModal = document.getElementById('loginModal');
         const mainSystem = document.getElementById('mainSystem');
         const adminModeBtn = document.getElementById('adminModeBtn');
@@ -653,9 +676,133 @@
         // Variáveis para controle de edição
         let editingAppId = null;
 
+        // Sistema de Status
+        function showStatus(message, type = 'info') {
+            statusBar.style.display = 'flex';
+            statusText.textContent = message;
+            
+            statusBar.className = 'status-bar';
+            if (type === 'success') {
+                statusBar.classList.add('status-online');
+                statusIcon.textContent = '✅';
+            } else if (type === 'error') {
+                statusBar.classList.add('status-error');
+                statusIcon.textContent = '❌';
+            } else if (type === 'warning') {
+                statusBar.classList.add('status-offline');
+                statusIcon.textContent = '⚠️';
+            } else {
+                statusBar.classList.add('status-offline');
+                statusIcon.textContent = '⚡';
+            }
+            
+            setTimeout(() => {
+                statusBar.style.display = 'none';
+            }, 3000);
+        }
+
+        // Sistema de Armazenamento Online - Google Sheets
+        async function loadAppsFromSheets() {
+            showStatus('Carregando aplicativos...', 'info');
+            
+            try {
+                // Fallback para dados locais se a API não estiver configurada
+                if (!GOOGLE_APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) {
+                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        apps = data.apps;
+                        showStatus('Aplicativos carregados com sucesso!', 'success');
+                    } else {
+                        throw new Error('Erro ao carregar dados');
+                    }
+                } else {
+                    // Usar dados locais como fallback
+                    const localApps = localStorage.getItem('myApps');
+                    apps = localApps ? JSON.parse(localApps) : getDefaultApps();
+                    showStatus('Usando armazenamento local', 'warning');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar apps:', error);
+                const localApps = localStorage.getItem('myApps');
+                apps = localApps ? JSON.parse(localApps) : getDefaultApps();
+                showStatus('Erro ao carregar online. Usando local.', 'error');
+            }
+            
+            renderApps();
+        }
+
+        async function saveAppsToSheets() {
+            if (currentMode !== 'admin') return;
+            
+            showStatus('Salvando alterações...', 'info');
+            
+            try {
+                // Tentar salvar online se a API estiver configurada
+                if (!GOOGLE_APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbw7X5-EAL_lb-9o8kB7RCRA6qmQrQ1hKNFGQfAZAQvo_pUvg-thnsGxtPtI4-Jx9wF89A/exec')) {
+                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ action: 'save', apps: apps })
+                    });
+                    
+                    const result = await response.json();
+                    if (!result.success) {
+                        throw new Error('Erro ao salvar online');
+                    }
+                }
+                
+                // Sempre salvar localmente como backup
+                localStorage.setItem('myApps', JSON.stringify(apps));
+                showStatus('Alterações salvas com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao salvar online:', error);
+                // Salvar apenas localmente em caso de erro
+                localStorage.setItem('myApps', JSON.stringify(apps));
+                showStatus('Salvo localmente (erro online)', 'warning');
+            }
+        }
+
+        function getDefaultApps() {
+            return [
+                {
+                    id: 1,
+                    name: "Gmail",
+                    url: "https://mail.google.com",
+                    description: "Serviço de email do Google",
+                    icon: "📧"
+                },
+                {
+                    id: 2,
+                    name: "Google Drive",
+                    url: "https://drive.google.com",
+                    description: "Armazenamento em nuvem",
+                    icon: "📁"
+                },
+                {
+                    id: 3,
+                    name: "WhatsApp Web",
+                    url: "https://web.whatsapp.com",
+                    description: "Mensagens instantâneas",
+                    icon: "💬"
+                },
+                {
+                    id: 4,
+                    name: "Trello",
+                    url: "https://trello.com",
+                    description: "Gestão de projetos",
+                    icon: "📋"
+                }
+            ];
+        }
+
+        // [O resto do código JavaScript permanece igual...]
         // Sistema de Autenticação
         function initAuthSystem() {
-            // Verificar se já está logado
             const savedMode = localStorage.getItem('currentMode');
             if (savedMode) {
                 currentMode = savedMode;
@@ -663,7 +810,6 @@
                 return;
             }
 
-            // Event Listeners para os modos
             adminModeBtn.addEventListener('click', () => selectMode('admin'));
             userModeBtn.addEventListener('click', () => selectMode('user'));
             accessBtn.addEventListener('click', handleAccess);
@@ -673,7 +819,6 @@
         function selectMode(mode) {
             currentMode = mode;
             
-            // Ativar botão selecionado
             adminModeBtn.classList.remove('active');
             userModeBtn.classList.remove('active');
             
@@ -683,7 +828,6 @@
             } else {
                 userModeBtn.classList.add('active');
                 passwordSection.style.display = 'none';
-                // Acesso direto para modo usuário
                 handleAccess();
             }
         }
@@ -707,14 +851,9 @@
             loginModal.style.display = 'none';
             mainSystem.style.display = 'block';
             
-            // Salvar modo atual
             localStorage.setItem('currentMode', currentMode);
-            
-            // Atualizar interface conforme o modo
             updateInterfaceForMode();
-            
-            // Carregar aplicativos
-            renderApps();
+            loadAppsFromSheets();
         }
 
         function updateInterfaceForMode() {
@@ -765,12 +904,10 @@
                     </div>
                 `;
                 
-                // Abrir aplicativo ao clicar
                 appCard.addEventListener('click', () => {
                     window.open(app.url, '_blank');
                 });
                 
-                // Editar aplicativo com clique direito (apenas admin)
                 if (currentMode === 'admin') {
                     appCard.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
@@ -782,7 +919,7 @@
             });
         }
 
-        function handleAppSubmit(e) {
+        async function handleAppSubmit(e) {
             e.preventDefault();
             
             if (currentMode !== 'admin') {
@@ -796,7 +933,6 @@
             const appIcon = document.getElementById('appIcon').value;
             
             if (editingAppId) {
-                // Editar aplicativo existente
                 const appIndex = apps.findIndex(app => app.id === editingAppId);
                 if (appIndex !== -1) {
                     apps[appIndex] = {
@@ -808,7 +944,6 @@
                     };
                 }
             } else {
-                // Adicionar novo aplicativo
                 const newApp = {
                     id: Date.now(),
                     name: appName,
@@ -819,7 +954,7 @@
                 apps.push(newApp);
             }
             
-            localStorage.setItem('myApps', JSON.stringify(apps));
+            await saveAppsToSheets();
             renderApps();
             closeModal();
             resetForm();
@@ -860,7 +995,7 @@
             renderApps(filteredApps);
         }
 
-        // Event Listeners para gestão de aplicativos
+        // Event Listeners
         addAppBtn.addEventListener('click', () => {
             if (currentMode === 'admin') {
                 appModal.style.display = 'flex';
