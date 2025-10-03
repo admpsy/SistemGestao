@@ -649,3 +649,887 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão Integrado</title>
+    <style>
+        :root {
+            --primary-color: #0a0e17;
+            --secondary-color: #1a1f2e;
+            --accent-color: #00f3ff;
+            --accent-glow: 0 0 10px rgba(0, 243, 255, 0.7);
+            --background-color: #121826;
+            --card-color: #1e2435;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --neon-border: 1px solid #00f3ff;
+            --admin-color: #ff4444;
+            --user-color: #44ff44;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Modal de Login */
+        .login-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-content {
+            background-color: var(--card-color);
+            padding: 3rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5), var(--accent-glow);
+            border: var(--neon-border);
+            text-align: center;
+        }
+
+        .login-title {
+            color: var(--accent-color);
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 1rem;
+            border: var(--neon-border);
+            border-radius: 8px;
+            background: var(--secondary-color);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--accent-glow);
+        }
+
+        .mode-btn.active {
+            background: var(--accent-color);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .admin-btn {
+            border-color: var(--admin-color);
+        }
+
+        .user-btn {
+            border-color: var(--user-color);
+        }
+
+        .password-section {
+            margin-top: 1.5rem;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--secondary-color);
+            border: 1px solid #2a3042;
+            border-radius: 5px;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        .access-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: var(--accent-color);
+            border: var(--neon-border);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .access-btn:hover {
+            box-shadow: var(--accent-glow);
+        }
+
+        /* Header com informações de modo */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-bottom: var(--neon-border);
+            position: relative;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .mode-indicator {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .admin-mode {
+            background: var(--admin-color);
+            color: white;
+        }
+
+        .user-mode {
+            background: var(--user-color);
+            color: var(--primary-color);
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 0.3rem 0.8rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--accent-color);
+            color: var(--primary-color);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        .header-subtitle {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            flex: 1;
+        }
+
+        .search-bar {
+            margin: 1.5rem 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .search-bar input {
+            width: 100%;
+            max-width: 500px;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--card-color);
+            border: var(--neon-border);
+            border-radius: 50px;
+            box-shadow: var(--accent-glow);
+            font-size: 1rem;
+            outline: none;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.9);
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .app-card {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 200px;
+            border: 1px solid #2a3042;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-color);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), var(--accent-glow);
+        }
+
+        .app-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        .app-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .app-description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .add-app-btn {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: var(--accent-color);
+            border: var(--neon-border);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: var(--accent-glow);
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .add-app-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.9);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-color);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5), var(--accent-glow);
+            border: var(--neon-border);
+        }
+
+        .modal h2 {
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--secondary-color);
+            border: 1px solid #2a3042;
+            border-radius: 5px;
+            font-size: 1rem;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: var(--accent-glow);
+            outline: none;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: var(--accent-color);
+            border: var(--neon-border);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.7);
+        }
+
+        .btn-secondary {
+            background-color: #2a3042;
+            color: var(--text-color);
+            border: 1px solid #3a4052;
+        }
+
+        .btn-secondary:hover {
+            background-color: #3a4052;
+        }
+
+        footer {
+            background-color: var(--primary-color);
+            color: var(--text-muted);
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: auto;
+            border-top: var(--neon-border);
+            position: relative;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-color);
+            box-shadow: var(--accent-glow);
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .developer {
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        .ai-assistance {
+            font-size: 0.9rem;
+        }
+
+        /* Garantindo que os aplicativos fiquem lado a lado */
+        @media (min-width: 768px) {
+            .apps-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .apps-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 767px) {
+            .apps-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .apps-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header-subtitle {
+                font-size: 1rem;
+            }
+            
+            .mode-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal de Login -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-content">
+            <h2 class="login-title">Sistema de Gestão Integrado</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-muted);">Selecione o modo de acesso</p>
+            
+            <div class="mode-buttons">
+                <button class="mode-btn admin-btn" id="adminModeBtn" data-mode="admin">
+                    🔐 Administrador
+                </button>
+                <button class="mode-btn user-btn" id="userModeBtn" data-mode="user">
+                    👤 Usuário
+                </button>
+            </div>
+            
+            <div class="password-section" id="passwordSection" style="display: none;">
+                <input type="password" class="password-input" id="passwordInput" placeholder="Digite a senha de administrador">
+                <button class="access-btn" id="accessBtn">Acessar Sistema</button>
+            </div>
+            
+            <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                <p><strong>Modo Administrador:</strong> Gerencia aplicativos</p>
+                <p><strong>Modo Usuário:</strong> Apenas visualização</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sistema Principal (inicialmente oculto) -->
+    <div id="mainSystem" style="display: none;">
+        <header>
+            <div class="header-content">
+                <button class="logout-btn" id="logoutBtn">↩ Sair</button>
+                <h1>Sistema de Gestão Integrado</h1>
+                <p class="header-subtitle">Todos os seus aplicativos em um só lugar</p>
+                <div class="mode-indicator" id="modeIndicator"></div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Pesquisar aplicativos...">
+            </div>
+
+            <div class="apps-grid" id="appsGrid">
+                <!-- Os aplicativos serão carregados aqui pelo JavaScript -->
+            </div>
+        </div>
+
+        <button class="add-app-btn" id="addAppBtn">+</button>
+
+        <!-- Modal para adicionar novo aplicativo -->
+        <div class="modal" id="appModal">
+            <div class="modal-content">
+                <h2 id="modalTitle">Adicionar Novo Aplicativo</h2>
+                <form id="appForm">
+                    <div class="form-group">
+                        <label for="appName">Nome do Aplicativo</label>
+                        <input type="text" id="appName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appUrl">URL do Aplicativo</label>
+                        <input type="url" id="appUrl" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appDescription">Descrição (opcional)</label>
+                        <textarea id="appDescription"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="appIcon">Ícone (emoji ou texto)</label>
+                        <input type="text" id="appIcon" placeholder="Ex: 📧, 🔧, 📊" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-content">
+                <div class="developer">Aldemir Garbino</div>
+                <div class="ai-assistance">Desenvolvido com assistência de IA</div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Configurações do sistema
+        const ADMIN_PASSWORD = "admin123"; // Senha do administrador (pode ser alterada)
+        let currentMode = null;
+        let apps = JSON.parse(localStorage.getItem('myApps')) || [
+            {
+                id: 1,
+                name: "Gmail",
+                url: "https://mail.google.com",
+                description: "Serviço de email do Google",
+                icon: "📧"
+            },
+            {
+                id: 2,
+                name: "Google Drive",
+                url: "https://drive.google.com",
+                description: "Armazenamento em nuvem",
+                icon: "📁"
+            },
+            {
+                id: 3,
+                name: "WhatsApp Web",
+                url: "https://web.whatsapp.com",
+                description: "Mensagens instantâneas",
+                icon: "💬"
+            },
+            {
+                id: 4,
+                name: "Trello",
+                url: "https://trello.com",
+                description: "Gestão de projetos",
+                icon: "📋"
+            }
+        ];
+
+        // Elementos DOM
+        const loginModal = document.getElementById('loginModal');
+        const mainSystem = document.getElementById('mainSystem');
+        const adminModeBtn = document.getElementById('adminModeBtn');
+        const userModeBtn = document.getElementById('userModeBtn');
+        const passwordSection = document.getElementById('passwordSection');
+        const passwordInput = document.getElementById('passwordInput');
+        const accessBtn = document.getElementById('accessBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const modeIndicator = document.getElementById('modeIndicator');
+        
+        const appsGrid = document.getElementById('appsGrid');
+        const addAppBtn = document.getElementById('addAppBtn');
+        const appModal = document.getElementById('appModal');
+        const appForm = document.getElementById('appForm');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const searchInput = document.getElementById('searchInput');
+        const modalTitle = document.getElementById('modalTitle');
+
+        // Variáveis para controle de edição
+        let editingAppId = null;
+
+        // Sistema de Autenticação
+        function initAuthSystem() {
+            // Verificar se já está logado
+            const savedMode = localStorage.getItem('currentMode');
+            if (savedMode) {
+                currentMode = savedMode;
+                showMainSystem();
+                return;
+            }
+
+            // Event Listeners para os modos
+            adminModeBtn.addEventListener('click', () => selectMode('admin'));
+            userModeBtn.addEventListener('click', () => selectMode('user'));
+            accessBtn.addEventListener('click', handleAccess);
+            logoutBtn.addEventListener('click', logout);
+        }
+
+        function selectMode(mode) {
+            currentMode = mode;
+            
+            // Ativar botão selecionado
+            adminModeBtn.classList.remove('active');
+            userModeBtn.classList.remove('active');
+            
+            if (mode === 'admin') {
+                adminModeBtn.classList.add('active');
+                passwordSection.style.display = 'block';
+            } else {
+                userModeBtn.classList.add('active');
+                passwordSection.style.display = 'none';
+                // Acesso direto para modo usuário
+                handleAccess();
+            }
+        }
+
+        function handleAccess() {
+            if (currentMode === 'admin') {
+                const password = passwordInput.value;
+                if (password === ADMIN_PASSWORD) {
+                    showMainSystem();
+                } else {
+                    alert('Senha de administrador incorreta!');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            } else if (currentMode === 'user') {
+                showMainSystem();
+            }
+        }
+
+        function showMainSystem() {
+            loginModal.style.display = 'none';
+            mainSystem.style.display = 'block';
+            
+            // Salvar modo atual
+            localStorage.setItem('currentMode', currentMode);
+            
+            // Atualizar interface conforme o modo
+            updateInterfaceForMode();
+            
+            // Carregar aplicativos
+            renderApps();
+        }
+
+        function updateInterfaceForMode() {
+            if (currentMode === 'admin') {
+                modeIndicator.textContent = '🔐 Modo Administrador';
+                modeIndicator.className = 'mode-indicator admin-mode';
+                addAppBtn.style.display = 'block';
+            } else {
+                modeIndicator.textContent = '👤 Modo Usuário';
+                modeIndicator.className = 'mode-indicator user-mode';
+                addAppBtn.style.display = 'none';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentMode');
+            currentMode = null;
+            mainSystem.style.display = 'none';
+            loginModal.style.display = 'flex';
+            passwordInput.value = '';
+            adminModeBtn.classList.remove('active');
+            userModeBtn.classList.remove('active');
+            passwordSection.style.display = 'none';
+        }
+
+        // Sistema de Gestão de Aplicativos
+        function renderApps(appsToRender = apps) {
+            appsGrid.innerHTML = '';
+            
+            if (appsToRender.length === 0) {
+                appsGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">
+                        Nenhum aplicativo encontrado. 
+                        ${currentMode === 'admin' ? 'Clique no botão "+" para adicionar um novo.' : ''}
+                    </div>
+                `;
+                return;
+            }
+            
+            appsToRender.forEach(app => {
+                const appCard = document.createElement('div');
+                appCard.className = 'app-card';
+                appCard.innerHTML = `
+                    <div class="app-icon">${app.icon}</div>
+                    <div>
+                        <div class="app-name">${app.name}</div>
+                        <div class="app-description">${app.description}</div>
+                    </div>
+                `;
+                
+                // Abrir aplicativo ao clicar
+                appCard.addEventListener('click', () => {
+                    window.open(app.url, '_blank');
+                });
+                
+                // Editar aplicativo com clique direito (apenas admin)
+                if (currentMode === 'admin') {
+                    appCard.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        editApp(app.id);
+                    });
+                }
+                
+                appsGrid.appendChild(appCard);
+            });
+        }
+
+        function handleAppSubmit(e) {
+            e.preventDefault();
+            
+            if (currentMode !== 'admin') {
+                alert('Apenas administradores podem modificar aplicativos.');
+                return;
+            }
+            
+            const appName = document.getElementById('appName').value;
+            const appUrl = document.getElementById('appUrl').value;
+            const appDescription = document.getElementById('appDescription').value;
+            const appIcon = document.getElementById('appIcon').value;
+            
+            if (editingAppId) {
+                // Editar aplicativo existente
+                const appIndex = apps.findIndex(app => app.id === editingAppId);
+                if (appIndex !== -1) {
+                    apps[appIndex] = {
+                        ...apps[appIndex],
+                        name: appName,
+                        url: appUrl,
+                        description: appDescription,
+                        icon: appIcon
+                    };
+                }
+            } else {
+                // Adicionar novo aplicativo
+                const newApp = {
+                    id: Date.now(),
+                    name: appName,
+                    url: appUrl,
+                    description: appDescription,
+                    icon: appIcon
+                };
+                apps.push(newApp);
+            }
+            
+            localStorage.setItem('myApps', JSON.stringify(apps));
+            renderApps();
+            closeModal();
+            resetForm();
+        }
+
+        function editApp(id) {
+            if (currentMode !== 'admin') return;
+            
+            const app = apps.find(app => app.id === id);
+            if (app) {
+                document.getElementById('appName').value = app.name;
+                document.getElementById('appUrl').value = app.url;
+                document.getElementById('appDescription').value = app.description;
+                document.getElementById('appIcon').value = app.icon;
+                
+                editingAppId = id;
+                modalTitle.textContent = 'Editar Aplicativo';
+                appModal.style.display = 'flex';
+            }
+        }
+
+        function closeModal() {
+            appModal.style.display = 'none';
+            editingAppId = null;
+            modalTitle.textContent = 'Adicionar Novo Aplicativo';
+        }
+
+        function resetForm() {
+            appForm.reset();
+        }
+
+        function filterApps() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredApps = apps.filter(app => 
+                app.name.toLowerCase().includes(searchTerm) || 
+                app.description.toLowerCase().includes(searchTerm)
+            );
+            renderApps(filteredApps);
+        }
+
+        // Event Listeners para gestão de aplicativos
+        addAppBtn.addEventListener('click', () => {
+            if (currentMode === 'admin') {
+                appModal.style.display = 'flex';
+            }
+        });
+
+        cancelBtn.addEventListener('click', closeModal);
+        appForm.addEventListener('submit', handleAppSubmit);
+        searchInput.addEventListener('input', filterApps);
+
+        window.addEventListener('click', (e) => {
+            if (e.target === appModal) {
+                closeModal();
+            }
+        });
+
+        // Inicializar sistema
+        initAuthSystem();
+    </script>
+</body>
+</html>
